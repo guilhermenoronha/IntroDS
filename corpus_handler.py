@@ -2,6 +2,7 @@ import urllib.request, os, shutil, glob, re, nltk, gensim, scipy.stats, string
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PortugueseStemmer
+from nltk import FreqDist
 
 class CorpusHandler:
 
@@ -13,7 +14,8 @@ class CorpusHandler:
         # set the language for the stopwords
         self.stop_words = set(stopwords.words(language))
         # set the punctuactions
-        self.punctuations = set(string.punctuation)
+        symbols = {"º", "ª", "“", "”", "–", "¾", ',', '„', '⅞', '°', '\'', '£', '…', '’', '½'}
+        self.punctuations = set(string.punctuation).union(symbols)
         # get the lemmas
         self.lemmas = PortugueseStemmer()
         # load and clean the texts
@@ -37,7 +39,21 @@ class CorpusHandler:
         normalized = " ".join(self.lemmas.stem(word) for word in punc_free.split())
         return normalized
 
-
-    def LDA_modelling(self):
+    def get_LDA_modelling(self):
         LDA = gensim.models.ldamodel.LdaModel
         return LDA(self.bag_of_words, num_topics=3, id2word = self.dictionary, passes=50)
+    
+    def get_corpus_frequent_terms(self, num_words):
+        all_texts = ""
+        for text in self.texts:
+            all_texts += text
+        fdist = FreqDist(all_texts.split())
+        return fdist.most_common(num_words)
+
+    def get_bigrams(self, doc_num):
+        return nltk.bigrams(self.texts[doc_num].split())
+
+    def get_trigrams(self, doc_num):
+        return nltk.trigrams(self.texts[doc_num].split())
+        
+
