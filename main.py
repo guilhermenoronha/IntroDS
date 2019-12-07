@@ -17,6 +17,14 @@ if __name__ == "__main__":
     print("First document LDA model")
     lda = ch.get_LDA_modelling()
     print(lda.print_topics(num_topics=1, num_words=3))
+
+    print("Word Embedding using FastText")
+    wb = ch.word_embedding()
+    print(wb.wv.most_similar("amigo"))
+
+    print("Plotting Word Embedding graph")
+    ch.plot_word_embedding("amigo", wb)
+    
     
     
     

@@ -3,6 +3,11 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PortugueseStemmer
 from nltk import FreqDist
+from gensim.models import FastText
+import networkx as nx
+import multiprocessing
+import matplotlib
+import matplotlib.pyplot as plt
 
 class CorpusHandler:
 
@@ -23,6 +28,7 @@ class CorpusHandler:
         for fil in self.list_of_files:
             with open(fil, "r", encoding='utf-8') as f:
                 txt = f.read()
+                #self.texts.append(txt)
                 self.texts.append(self._clean_text(txt))
         # create tokens
         self.tokens = [[w.lower() for w in word_tokenize(text)] for text in self.texts]
@@ -55,5 +61,22 @@ class CorpusHandler:
 
     def get_trigrams(self, doc_num):
         return nltk.trigrams(self.texts[doc_num].split())
+
+    def word_embedding(self):
+        return FastText(self.tokens, size=100, min_count=5, workers=multiprocessing.cpu_count(), sg=1)
+    
+    def plot_word_embedding(self, word, model, nviz=15):
+        g = nx.Graph()
+        g.add_node(word, attr={'color':'blue'})
+        viz1 = model.most_similar(word, topn=nviz)
+        g.add_weighted_edges_from([(word, v, w) for v,w in viz1 if w> 0.5] )
+        for v in viz1:
+            g.add_weighted_edges_from([(v[0], v2, w2) for v2,w2 in model.most_similar(v[0])])
+        cols = ['r']*len(g.nodes()); cols[list(g.nodes()).index(word)]='b'
+        pos = nx.spring_layout(g, iterations=100)
+        plt.figure(3,figsize=(12,12))
+        nx.draw_networkx(g,pos=pos, node_color=cols, node_size=500, alpha=0.5, font_size=8)
+        plt.savefig("Graph.png", format="PNG")
+
         
 
